@@ -768,24 +768,129 @@ function loadImageSafe(src) {
 }
 
 // ===== QR CODE =====
-async function uploadWithTimeout(url, options, timeout = 40000) {
+const UPLOAD_TIMEOUT_MS = 35000; // server tối đa ~26s (xem upload.js), client chờ lâu hơn một chút
+let qrUploadToken = 0;           // mỗi lần mở/đóng modal QR tăng lên, để bỏ kết quả upload của lần cũ
+
+async function uploadWithTimeout(url, options, timeout = UPLOAD_TIMEOUT_MS) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
-        const response = await fetch(url, {
+        return await fetch(url, {
             ...options,
             signal: controller.signal
         });
-        clearTimeout(timeoutId);
-        return response;
     } catch (error) {
-        clearTimeout(timeoutId);
         if (error.name === 'AbortError') {
-            throw new Error('Upload quá lâu (>10s)');
+            throw new Error(`Upload quá lâu (>${Math.round(timeout / 1000)}s)`);
         }
         throw error;
+    } finally {
+        clearTimeout(timeoutId);
     }
+}
+
+// Gọi /api/upload một lần. Trả về URL ảnh, hoặc ném lỗi với message nói rõ lý do.
+async function requestImageUpload(base64Data) {
+    const response = await uploadWithTimeout('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64Data })
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+        throw new Error(`Server không trả JSON (HTTP ${response.status}), /api/upload có đang chạy không?`);
+    }
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+        throw new Error(`Server lỗi (${response.status}): ${data.error || 'không rõ lý do'}`);
+    }
+    if (!data.success || !data.url) {
+        throw new Error(data.error || 'Upload thất bại');
+    }
+    return data.url;
+}
+
+function renderQRSuccess(container, imageUrl) {
+    const previewUrl = `${window.location.origin}/preview.html?img=${encodeURIComponent(imageUrl)}`;
+
+    container.innerHTML = '';
+    setTimeout(() => {
+        new QRCode(container, {
+            text: previewUrl,
+            width: 200,
+            height: 200,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+        });
+
+        const successMsg = document.createElement('div');
+        successMsg.innerHTML = `
+            <p style="color: #4caf50; font-size: 0.9rem; margin-top: 15px; font-weight: 600;">
+                ✅ Quét QR để xem và tải ảnh
+            </p>
+            <p style="color: #2196F3; font-size: 1rem; margin-top: 12px; font-weight: 600;">
+                SGUET cảm ơn bạn đã ghé thăm 💙
+            </p>
+            <p style="color: #666; font-size: 0.8rem; margin-top: 8px;">
+                📱 Theo dõi: facebook.com/SupportGroupUET
+            </p>
+        `;
+        container.appendChild(successMsg);
+    }, 50);
+}
+
+function renderQRFailure(container, errorMessage) {
+    // Dựng bằng DOM + textContent để lý do lỗi không bị hiểu là HTML
+    container.innerHTML = '';
+
+    const wrap = document.createElement('div');
+    wrap.style.textAlign = 'center';
+
+    const title = document.createElement('p');
+    title.style.cssText = 'color: #ff9800; font-weight: 600; margin-bottom: 8px;';
+    title.textContent = '⚠️ Chưa tạo được mã QR';
+    wrap.appendChild(title);
+
+    // Server ngăn cách lỗi từng host bằng " | " -> mỗi host một dòng
+    const details = document.createElement('div');
+    details.style.cssText = 'color: #999; font-size: 0.75rem; margin: 0 auto 14px; max-width: 360px; line-height: 1.5; word-break: break-word;';
+    String(errorMessage || 'Không rõ lý do').split(' | ').forEach(line => {
+        const row = document.createElement('div');
+        row.textContent = line;
+        details.appendChild(row);
+    });
+    wrap.appendChild(details);
+
+    const hint = document.createElement('p');
+    hint.style.cssText = 'color: #666; font-size: 0.85rem; margin-bottom: 15px;';
+    hint.textContent = 'Bạn có thể thử lại, hoặc tải ảnh về máy tính.';
+    wrap.appendChild(hint);
+
+    const btnStyle = 'padding: 12px 24px; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 1rem; margin: 4px;';
+
+    const retryBtn = document.createElement('button');
+    retryBtn.style.cssText = btnStyle + 'background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);';
+    retryBtn.innerHTML = '<i class="fas fa-rotate-right"></i> Thử lại';
+    retryBtn.addEventListener('click', showQRCode);
+    wrap.appendChild(retryBtn);
+
+    const downloadBtn = document.createElement('button');
+    downloadBtn.style.cssText = btnStyle + 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);';
+    downloadBtn.innerHTML = '<i class="fas fa-download"></i> Tải về máy tính';
+    downloadBtn.addEventListener('click', downloadImage);
+    wrap.appendChild(downloadBtn);
+
+    const thanks = document.createElement('p');
+    thanks.style.cssText = 'color: #2196F3; font-size: 1rem; margin-top: 15px; font-weight: 600;';
+    thanks.textContent = 'SGUET cảm ơn bạn 💙';
+    wrap.appendChild(thanks);
+
+    container.appendChild(wrap);
 }
 
 async function showQRCode() {
@@ -793,6 +898,8 @@ async function showQRCode() {
         alert('Không có ảnh để hiển thị!');
         return;
     }
+
+    const myToken = ++qrUploadToken;
 
     qrModal.classList.add('active');
 
@@ -806,83 +913,22 @@ async function showQRCode() {
 
     try {
         const base64Data = STATE.finalImage.split(',')[1];
+        const imageUrl = await requestImageUpload(base64Data);
 
-        const response = await uploadWithTimeout('/api/upload', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: base64Data })
-        }, 40000);
+        // Người dùng đã đóng modal / chụp ảnh mới trong lúc chờ -> bỏ kết quả cũ
+        if (myToken !== qrUploadToken) return;
 
-        // Check if response is JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error(`Server không trả JSON (HTTP ${response.status}), /api/upload có đang chạy không?`);
-        }
-
-        // Đọc body trước để lấy lý do lỗi thật từ server
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(`Server lỗi (${response.status}): ${data.error || 'không rõ lý do'}`);
-        }
-
-        if (data.success && data.url) {
-            const imageUrl = data.url;
-            const previewUrl = `${window.location.origin}/preview.html?img=${encodeURIComponent(imageUrl)}`;
-
-            qrcodeContainer.innerHTML = '';
-            setTimeout(() => {
-                new QRCode(qrcodeContainer, {
-                    text: previewUrl,
-                    width: 200,
-                    height: 200,
-                    colorDark: '#000000',
-                    colorLight: '#ffffff',
-                    correctLevel: QRCode.CorrectLevel.M
-                });
-
-                const successMsg = document.createElement('div');
-                successMsg.innerHTML = `
-                    <p style="color: #4caf50; font-size: 0.9rem; margin-top: 15px; font-weight: 600;">
-                        ✅ Quét QR để xem và tải ảnh
-                    </p>
-                    <p style="color: #2196F3; font-size: 1rem; margin-top: 12px; font-weight: 600;">
-                        SGUET cảm ơn bạn đã ghé thăm 💙
-                    </p>
-                    <p style="color: #666; font-size: 0.8rem; margin-top: 8px;">
-                        📱 Theo dõi: facebook.com/SupportGroupUET
-                    </p>
-                `;
-                qrcodeContainer.appendChild(successMsg);
-            }, 50);
-        } else {
-            throw new Error(data.error || 'Upload thất bại');
-        }
-
+        renderQRSuccess(qrcodeContainer, imageUrl);
     } catch (error) {
         console.error('Upload error:', error);
-
-        qrcodeContainer.innerHTML = `
-            <div style="text-align: center;">
-                <p style="color: #ff9800; font-weight: 600; margin-bottom: 10px;">
-                    ⚠️ ${error.message || 'Không thể upload'}
-                </p>
-                <p style="color: #666; font-size: 0.85rem; margin-bottom: 15px;">
-                    Mạng có vẻ chậm. Tải về máy tính nhé!
-                </p>
-                <button onclick="document.getElementById('downloadDirectBtn').click()" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 1rem;">
-                    <i class="fas fa-download"></i> Tải về máy tính
-                </button>
-                <p style="color: #2196F3; font-size: 1rem; margin-top: 15px; font-weight: 600;">
-                    SGUET cảm ơn bạn 💙
-                </p>
-            </div>
-        `;
+        if (myToken !== qrUploadToken) return;
+        renderQRFailure(qrcodeContainer, error.message || 'Không thể upload');
     }
 }
 
 function closeQRModal() {
     qrModal.classList.remove('active');
+    qrUploadToken++; // hủy mọi upload đang chờ
 
     // Clear QR code to prevent duplicates on next open
     const qrcodeContainer = document.getElementById('qrcode');
