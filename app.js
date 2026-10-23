@@ -23,17 +23,20 @@ let FRAME_POSITIONS = {
             {
                 "x": 83,
                 "y": 937,
-                "centerX": false
+                "centerX": false,
+                "rotate": 90
             },
             {
                 "x": 90,
                 "y": 1932,
-                "centerX": false
+                "centerX": false,
+                "rotate": 90
             },
             {
                 "x": 83,
                 "y": 2904,
-                "centerX": false
+                "centerX": false,
+                "rotate": 90
             }
         ]
     },
@@ -46,17 +49,20 @@ let FRAME_POSITIONS = {
             {
                 "x": 103,
                 "y": 959,
-                "centerX": false
+                "centerX": false,
+                "rotate": 90
             },
             {
                 "x": 103,
                 "y": 1953,
-                "centerX": false
+                "centerX": false,
+                "rotate": 90
             },
             {
                 "x": 105,
                 "y": 2949,
-                "centerX": false
+                "centerX": false,
+                "rotate": 90
             }
         ]
     }
@@ -658,27 +664,37 @@ async function createFramedImage(framePath) {
 
         const pos = config.positions[index];
         const size = config.photoSize;
+        const rotateAngle = ((pos.rotate || 0) * Math.PI) / 180;
+        const isRotated90 = Math.abs(pos.rotate || 0) % 180 === 90;
 
-        let x = pos.x * scale;
+        let slotX = pos.x * scale;
         if (pos.centerX) {
-            x = (canvas.width - size.width * scale) / 2;
+            slotX = (canvas.width - size.width * scale) / 2;
         }
+        const slotY = pos.y * scale;
+        const slotW = size.width * scale;
+        const slotH = size.height * scale;
 
-        const scaleX = (size.width * scale) / photoImg.width;
-        const scaleY = (size.height * scale) / photoImg.height;
+        // When rotated 90/270, effective photo dimensions are swapped
+        const effectiveW = isRotated90 ? slotH : slotW;
+        const effectiveH = isRotated90 ? slotW : slotH;
+
+        const scaleX = effectiveW / photoImg.width;
+        const scaleY = effectiveH / photoImg.height;
         const imgScale = Math.max(scaleX, scaleY);
 
         const scaledWidth = photoImg.width * imgScale;
         const scaledHeight = photoImg.height * imgScale;
 
-        const offsetX = (scaledWidth - size.width * scale) / 2;
-        const offsetY = (scaledHeight - size.height * scale) / 2;
-
         ctx.save();
         ctx.beginPath();
-        ctx.rect(x, pos.y * scale, size.width * scale, size.height * scale);
+        ctx.rect(slotX, slotY, slotW, slotH);
         ctx.clip();
-        ctx.drawImage(photoImg, x - offsetX, pos.y * scale - offsetY, scaledWidth, scaledHeight);
+
+        // Translate to center of slot, rotate, draw centered
+        ctx.translate(slotX + slotW / 2, slotY + slotH / 2);
+        ctx.rotate(rotateAngle);
+        ctx.drawImage(photoImg, -scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight);
         ctx.restore();
     });
 
