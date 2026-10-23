@@ -14,7 +14,7 @@ const STATE = {
 
 
 let FRAME_POSITIONS = {
-    "./Frames/Frame_1.png": {
+    "./Frames/Frame_1_final.png": {
         "photoSize": {
             "width": 780,
             "height": 575
@@ -37,7 +37,7 @@ let FRAME_POSITIONS = {
             }
         ]
     },
-    "./Frames/Frame2.png": {
+    "./Frames/Frame_2_final.png": {
         "photoSize": {
             "width": 780,
             "height": 562
@@ -56,29 +56,6 @@ let FRAME_POSITIONS = {
             {
                 "x": 52,
                 "y": 1900,
-                "centerX": false
-            }
-        ]
-    },
-    "./Frames/Frame3.png": {
-        "photoSize": {
-            "width": 789,
-            "height": 489
-        },
-        "positions": [
-            {
-                "x": 46,
-                "y": 715,
-                "centerX": false
-            },
-            {
-                "x": 47,
-                "y": 1327,
-                "centerX": false
-            },
-            {
-                "x": 46,
-                "y": 1940,
                 "centerX": false
             }
         ]
