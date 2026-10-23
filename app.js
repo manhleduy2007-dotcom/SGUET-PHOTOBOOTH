@@ -42,27 +42,27 @@ let FRAME_POSITIONS = {
     },
     "./Frames/Frame_2_final.png": {
         "photoSize": {
-            "width": 1154,
-            "height": 837
+            "width": 1214,
+            "height": 918
         },
         "positions": [
             {
-                "x": 103,
-                "y": 959,
+                "x": 73.2,
+                "y": 923.3,
                 "centerX": false,
-                "rotate": -1.426
+                "rotate": -1.425
             },
             {
-                "x": 103,
-                "y": 1953,
+                "x": 73.2,
+                "y": 1919.2,
                 "centerX": false,
-                "rotate": 1.426
+                "rotate": 1.425
             },
             {
-                "x": 105,
-                "y": 2949,
+                "x": 73.2,
+                "y": 2890.2,
                 "centerX": false,
-                "rotate": -1.426
+                "rotate": -1.425
             }
         ]
     }
