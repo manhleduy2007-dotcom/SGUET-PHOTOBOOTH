@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGUET Photobooth</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/jpeg" href="SGUET.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="SGUET.jpg">
+    <link rel="apple-touch-icon" href="SGUET.jpg">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#4A90E2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="SGUET Photo">
+    <meta name="description" content="Ứng dụng chụp ảnh kỷ yếu SGUET - Tự động chụp 3 ảnh">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1><img src="SGUET.jpg" alt="SGUET Logo" class="header-logo"> SGUET Photobooth</h1>
+    </header>
+
+    <div class="container">
+        <!-- Center: Camera View -->
+        <main class="camera-section">
+            <div class="camera-controls-wrapper">
+                <div class="camera-container">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="canvas" style="display: none;"></canvas>
+
+                    <!-- Flip Button -->
+                    <button id="flipBtn" class="flip-btn hidden" title="Lật camera">
+                        <i class="fas fa-camera-rotate"></i>
+                    </button>
+
+                    <!-- Countdown Overlay -->
+                    <div id="countdown" class="countdown-overlay hidden">
+                        <div id="countdownNumber" class="countdown-number">3</div>
+                    </div>
+                </div>
+
+                <!-- Capture Button (Right Side) -->
+                <div class="side-controls">
+                    <button id="captureBtn" class="btn-circle btn-capture hidden" title="Chụp ảnh">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bottom Controls -->
+            <div class="controls">
+                <button id="startBtn" class="btn btn-primary">
+                    <i class="fas fa-video"></i> Bật Camera
+                </button>
+                <button id="singleCaptureBtn" class="btn btn-info hidden">
+                    <i class="fas fa-camera"></i> Chụp 1 Ảnh
+                </button>
+                <button id="resetBtn" class="btn btn-warning hidden">
+                    <i class="fas fa-redo"></i> Chụp Lại
+                </button>
+            </div>
+        </main>
+
+        <!-- Right Panel: Photos -->
+        <aside class="photos-panel">
+            <h3>
+                <i class="fas fa-images"></i> Ảnh Đã Chụp
+                <span id="photoCount" class="photo-count">0/3</span>
+            </h3>
+            <div class="photo-slots">
+                <div class="photo-slot" data-index="0">
+                    <i class="fas fa-image"></i>
+                    <span>Ảnh 1</span>
+                    <button class="upload-photo-btn" data-index="0" title="Tải ảnh lên">
+                        <i class="fas fa-upload"></i>
+                    </button>
+                    <button class="delete-photo-btn hidden" data-index="0">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <button class="swap-photo-btn hidden" data-index="0">
+                        <i class="fas fa-arrows-rotate"></i>
+                    </button>
+                    <input type="file" class="photo-upload-input" data-index="0" accept="image/*"
+                        style="display: none;">
+                </div>
+                <div class="photo-slot" data-index="1">
+                    <i class="fas fa-image"></i>
+                    <span>Ảnh 2</span>
+                    <button class="upload-photo-btn" data-index="1" title="Tải ảnh lên">
+                        <i class="fas fa-upload"></i>
+                    </button>
+                    <button class="delete-photo-btn hidden" data-index="1">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <button class="swap-photo-btn hidden" data-index="1">
+                        <i class="fas fa-arrows-rotate"></i>
+                    </button>
+                    <input type="file" class="photo-upload-input" data-index="1" accept="image/*"
+                        style="display: none;">
+                </div>
+                <div class="photo-slot" data-index="2">
+                    <i class="fas fa-image"></i>
+                    <span>Ảnh 3</span>
+                    <button class="upload-photo-btn" data-index="2" title="Tải ảnh lên">
+                        <i class="fas fa-upload"></i>
+                    </button>
+                    <button class="delete-photo-btn hidden" data-index="2">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <button class="swap-photo-btn hidden" data-index="2">
+                        <i class="fas fa-arrows-rotate"></i>
+                    </button>
+                    <input type="file" class="photo-upload-input" data-index="2" accept="image/*"
+                        style="display: none;">
+                </div>
+            </div>
+
+            <button id="selectFrameBtn" class="btn btn-success hidden">
+                <i class="fas fa-images"></i> Chọn Khung Ảnh
+            </button>
+        </aside>
+
+        <!-- Bottom Panel: Settings -->
+        <aside class="settings-panel">
+            <div class="settings-card">
+                <h3><i class="fas fa-clock"></i> Thời Gian Tự Động Chụp</h3>
+                <div class="timer-options">
+                    <button class="timer-btn" data-timer="0">
+                        <i class="fas fa-bolt"></i>
+                        <span>Không</span>
+                    </button>
+                    <button class="timer-btn active" data-timer="3">
+                        <i class="fas fa-hourglass-start"></i>
+                        <span>3s</span>
+                    </button>
+                    <button class="timer-btn" data-timer="5">
+                        <i class="fas fa-hourglass-half"></i>
+                        <span>5s</span>
+                    </button>
+                    <button class="timer-btn" data-timer="10">
+                        <i class="fas fa-hourglass"></i>
+                        <span>10s</span>
+                    </button>
+                    <button class="timer-btn timer-btn-custom" id="customTimerBtn">
+                        <i class="fas fa-sliders"></i>
+                        <span>Tùy chọn</span>
+                    </button>
+                </div>
+                <div id="customTimerInput" class="custom-timer hidden">
+                    <input type="number" id="customTimer" min="1" max="60" placeholder="Nhập số giây">
+                    <button id="applyCustomTimer" class="btn-small">Áp dụng</button>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h3><i class="fas fa-info-circle"></i> Trạng Thái</h3>
+                <div class="status-info">
+                    <p><i class="fas fa-images"></i> Số ảnh: <strong id="photoCount">0/3</strong></p>
+                    <p><i class="fas fa-hourglass-half"></i> Chờ: <strong id="timerDisplay">3s</strong></p>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h3><i class="fas fa-sparkles"></i> Làm Mịn Da</h3>
+                <div class="beauty-toggle">
+                    <button class="beauty-btn active" id="beautyOnBtn">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Bật</span>
+                    </button>
+                    <button class="beauty-btn" id="beautyOffBtn">
+                        <i class="fas fa-times-circle"></i>
+                        <span>Tắt</span>
+                    </button>
+                </div>
+                <div class="beauty-info">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Tự động làm mịn da và làm đẹp khuôn mặt</span>
+                </div>
+            </div>
+
+            <!-- Camera Selection -->
+            <div class="settings-card" id="cameraSelectionSection">
+                <h3><i class="fas fa-video"></i> Camera</h3>
+                <select id="cameraSelect" class="camera-select">
+                    <option value="">Đang tải danh sách...</option>
+                </select>
+                <button id="refreshCameraBtn" class="refresh-camera-btn">
+                    <i class="fas fa-rotate"></i> Làm mới
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Swap Modal -->
+    <div id="swapModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-arrows-rotate"></i> Chọn Vị Trí Hoán Đổi</h2>
+                <button class="modal-close" id="closeSwapModal">&times;</button>
+            </div>
+            <div class="swap-options" id="swapOptions">
+                <!-- Swap options will be generated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Frame Selection Modal -->
+    <div id="frameModal" class="modal">
+        <div class="modal-content frame-selector-layout">
+            <div class="modal-header">
+                <h2><i class="fas fa-images"></i> Chọn Khung Ảnh</h2>
+                <button class="modal-close" id="closeFrameModal">&times;</button>
+            </div>
+
+            <div class="frame-content-wrapper">
+                <!-- Left Column: Preview (Sticky) -->
+                <div class="frame-preview-column">
+                    <h4><i class="fas fa-eye"></i> Xem Trước</h4>
+                    <div id="framePreview" class="frame-preview-container">
+                        <p style="color: #666;">Chọn khung để xem preview</p>
+                    </div>
+
+                    <div class="frame-preview-actions">
+                        <button class="btn btn-primary" id="confirmFrameBtn">
+                            <i class="fas fa-check"></i> Xác Nhận
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Column: Frame Options (Scrollable) -->
+                <div class="frame-options-column">
+                    <h4><i class="fas fa-images"></i> Danh Sách Khung</h4>
+                    <div class="frame-grid" id="frameGrid">
+                        <!-- Frame options will be generated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div id="qrModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-qrcode"></i> Quét Mã QR Để Tải Ảnh</h2>
+                <button class="modal-close" id="closeQrModal">&times;</button>
+            </div>
+            <div class="qr-container">
+                <div id="qrcode" style="display: flex; justify-content: center; margin: 20px 0;"></div>
+                <img id="finalImagePreview" style="max-width: 100%; border-radius: 8px; margin: 20px 0;" />
+                <p>Quét mã QR này bằng điện thoại để tải ảnh về</p>
+                <div class="qr-actions">
+                    <button id="downloadDirectBtn" class="btn btn-primary">
+                        <i class="fas fa-download"></i> Tải Về Máy Tính
+                    </button>
+                    <button id="newPhotoBtn" class="btn btn-success">
+                        <i class="fas fa-camera"></i> Chụp Ảnh Mới
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
