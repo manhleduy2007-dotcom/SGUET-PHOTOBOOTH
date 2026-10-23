@@ -16,27 +16,27 @@ const STATE = {
 let FRAME_POSITIONS = {
     "./Frames/Frame_1_final.png": {
         "photoSize": {
-            "width": 1191,
-            "height": 878
+            "width": 1214,
+            "height": 918
         },
         "positions": [
             {
-                "x": 83,
-                "y": 937,
+                "x": 73.2,
+                "y": 923.3,
                 "centerX": false,
-                "rotate": -1.426
+                "rotate": -1.425
             },
             {
-                "x": 90,
-                "y": 1932,
+                "x": 73.2,
+                "y": 1919.2,
                 "centerX": false,
-                "rotate": 1.426
+                "rotate": 1.425
             },
             {
-                "x": 83,
-                "y": 2904,
+                "x": 73.2,
+                "y": 2890.2,
                 "centerX": false,
-                "rotate": -1.426
+                "rotate": -1.425
             }
         ]
     },
