@@ -1,8 +1,8 @@
 // Vercel Serverless Function to proxy image upload to Catbox.moe
-import FormData from 'form-data';
-import fetch from 'node-fetch';
+const FormData = require('form-data');
+const fetch = require('node-fetch');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -30,8 +30,8 @@ export default async function handler(req, res) {
         const form = new FormData();
         form.append('reqtype', 'fileupload');
         form.append('fileToUpload', buffer, {
-            filename: 'photo.png',
-            contentType: 'image/png',
+            filename: 'photo.jpg',
+            contentType: 'image/jpeg',
             knownLength: buffer.length
         });
 
@@ -42,20 +42,21 @@ export default async function handler(req, res) {
             headers: {
                 ...form.getHeaders(),
                 'User-Agent': 'SGUET-Photobooth/1.0'
-            }
+            },
+            timeout: 25000
         });
 
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Catbox error:', response.status, errorText);
-            throw new Error(`Catbox returned ${response.status}`);
+            throw new Error(`Catbox returned ${response.status}: ${errorText}`);
         }
 
         const imageUrl = await response.text();
 
         if (!imageUrl || !imageUrl.trim().startsWith('https://')) {
             console.error('Invalid Catbox response:', imageUrl);
-            throw new Error('Invalid response from Catbox');
+            throw new Error('Invalid response from Catbox: ' + imageUrl);
         }
 
         return res.status(200).json({
@@ -64,10 +65,10 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        console.error('Upload error:', error);
+        console.error('Upload error:', error.message);
         return res.status(500).json({
             success: false,
             error: error.message || 'Upload failed'
         });
     }
-}
+};
