@@ -24,19 +24,19 @@ let FRAME_POSITIONS = {
                 "x": 83,
                 "y": 937,
                 "centerX": false,
-                "rotate": 90
+                "rotate": 1.426
             },
             {
                 "x": 90,
                 "y": 1932,
                 "centerX": false,
-                "rotate": 90
+                "rotate": 357.776
             },
             {
                 "x": 83,
                 "y": 2904,
                 "centerX": false,
-                "rotate": 90
+                "rotate": 1.426
             }
         ]
     },
@@ -50,19 +50,19 @@ let FRAME_POSITIONS = {
                 "x": 103,
                 "y": 959,
                 "centerX": false,
-                "rotate": 90
+                "rotate": 357.776
             },
             {
                 "x": 103,
                 "y": 1953,
                 "centerX": false,
-                "rotate": 90
+                "rotate": 1.426
             },
             {
                 "x": 105,
                 "y": 2949,
                 "centerX": false,
-                "rotate": 90
+                "rotate": 357.776
             }
         ]
     }
