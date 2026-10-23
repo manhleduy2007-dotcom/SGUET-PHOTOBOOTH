@@ -16,46 +16,46 @@ const STATE = {
 let FRAME_POSITIONS = {
     "./Frames/Frame_1_final.png": {
         "photoSize": {
-            "width": 780,
-            "height": 575
+            "width": 1191,
+            "height": 878
         },
         "positions": [
             {
-                "x": 48,
-                "y": 668,
+                "x": 83,
+                "y": 937,
                 "centerX": false
             },
             {
-                "x": 48,
-                "y": 1281,
+                "x": 90,
+                "y": 1932,
                 "centerX": false
             },
             {
-                "x": 52,
-                "y": 1900,
+                "x": 83,
+                "y": 2904,
                 "centerX": false
             }
         ]
     },
     "./Frames/Frame_2_final.png": {
         "photoSize": {
-            "width": 780,
-            "height": 562
+            "width": 1154,
+            "height": 837
         },
         "positions": [
             {
-                "x": 48,
-                "y": 681,
+                "x": 103,
+                "y": 959,
                 "centerX": false
             },
             {
-                "x": 48,
-                "y": 1291,
+                "x": 103,
+                "y": 1953,
                 "centerX": false
             },
             {
-                "x": 52,
-                "y": 1900,
+                "x": 105,
+                "y": 2949,
                 "centerX": false
             }
         ]
