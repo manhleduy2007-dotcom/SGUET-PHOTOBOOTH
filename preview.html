@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGUET Photobooth</title>
+    <link rel="icon" type="image/jpeg" href="SGUET.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="SGUET.jpg">
+    <link rel="apple-touch-icon" href="SGUET.jpg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .thank-you {
+            color: #2196F3;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .image-container {
+            margin: 20px 0;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .image-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .loading {
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2rem;
+        }
+
+        .error {
+            padding: 40px;
+            color: #ef4444;
+            font-size: 1rem;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        .info-text {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+
+        .footer {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+            color: #999;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.4rem;
+            }
+
+            .thank-you {
+                font-size: 1rem;
+            }
+
+            .download-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-camera"></i> SGUET Photobooth</h1>
+            <p class="thank-you">SGUET cảm ơn bạn đã ghé thăm 💙</p>
+        </div>
+
+        <div id="content">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i> Đang tải ảnh...
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 SGUET Photobooth</p>
+        </div>
+    </div>
+
+    <script>
+        // Get image URL from query parameter
+        function getImageUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('img');
+        }
+
+        // Load and display image
+        async function loadImage() {
+            const imageUrl = getImageUrl();
+            const contentDiv = document.getElementById('content');
+
+            if (!imageUrl) {
+                contentDiv.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Không tìm thấy ảnh!</p>
+                        <p style="font-size: 0.85rem; margin-top: 10px;">Link không hợp lệ hoặc đã hết hạn.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                // Display image directly without fetch check (avoid CORS issues)
+                contentDiv.innerHTML = `
+                    <div class="image-container">
+                        <img src="${imageUrl}" alt="SGUET Photo" id="photoImage" crossorigin="anonymous" 
+                             onerror="handleImageError()">
+                    </div>
+                    <button class="download-btn" onclick="downloadImage()">
+                        <i class="fas fa-download"></i>
+                        Tải Ảnh Về Máy
+                    </button>
+                    <div style="margin-top: 25px; padding: 20px; background: linear-gradient(135deg, #e8eaf6 0%, #f3f4ff 100%); border-radius: 12px; border: 2px solid #667eea;">
+                        <p style="color: #667eea; font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">
+                            📱 Theo dõi SGUET tại đây
+                        </p>
+                        <a href="https://www.facebook.com/SupportGroupUET" target="_blank" rel="noopener noreferrer" 
+                           style="display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #1877f2 0%, #0c5fb3 100%); color: white; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-weight: 600; font-size: 1rem; transition: all 0.3s; box-shadow: 0 4px 15px rgba(24, 119, 242, 0.3);"
+                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(24, 119, 242, 0.4)'"
+                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(24, 119, 242, 0.3)'">
+                            <i class="fab fa-facebook"></i>
+                            Trang Facebook SGUET
+                        </a>
+                        <p style="color: #666; font-size: 0.85rem; margin-top: 12px; line-height: 1.5;">
+                        </p>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading image:', error);
+                contentDiv.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Không thể tải ảnh!</p>
+                        <p style="font-size: 0.85rem; margin-top: 10px;">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Handle image load error
+        function handleImageError() {
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = `
+                <div class="error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Không thể tải ảnh!</p>
+                    <p style="font-size: 0.85rem; margin-top: 10px;">Link ảnh không hợp lệ hoặc đã hết hạn.</p>
+                </div>
+            `;
+        }
+
+        // Download image
+        async function downloadImage() {
+            const imageUrl = getImageUrl();
+            const btn = document.querySelector('.download-btn');
+
+            try {
+                // Method 1: Try direct download first (works for same-origin)
+                const link = document.createElement('a');
+                link.href = imageUrl;
+                link.download = `SGUET-Photo-${Date.now()}.jpg`;
+                link.target = '_blank';
+
+                // Try to download via blob (better for cross-origin)
+                try {
+                    const response = await fetch(imageUrl, { mode: 'cors' });
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    link.href = blobUrl;
+
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+                } catch (fetchError) {
+                    // Fallback: Open in new tab if fetch fails
+                    console.log('Fetch failed, opening in new tab:', fetchError);
+                    window.open(imageUrl, '_blank');
+                }
+
+                // Show success message
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Đã Tải Xuống!';
+                btn.style.background = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
+
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.background = '';
+                }, 2000);
+
+            } catch (error) {
+                console.error('Download error:', error);
+
+                // Ultimate fallback: Just open the image
+                window.open(imageUrl, '_blank');
+
+                btn.innerHTML = '<i class="fas fa-external-link"></i> Đã Mở Ảnh!';
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-download"></i> Tải Ảnh Về Máy';
+                }, 2000);
+            }
+        }
+
+        // Load image on page load
+        window.addEventListener('DOMContentLoaded', loadImage);
+    </script>
+</body>
+
+</html>

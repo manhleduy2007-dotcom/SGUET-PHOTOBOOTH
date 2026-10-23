@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Detector - 3 Photos Layout</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            color: white;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .frame-upload {
+            margin: 20px 0;
+        }
+
+        .frame-upload input {
+            padding: 10px;
+            margin-right: 10px;
+        }
+
+        .preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .preview-item {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .preview-item canvas {
+            width: 100%;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+
+        .preview-item .name {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .preview-item .info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .result-box {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Courier New';
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 20px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .detection-mode {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .detection-mode label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .detection-mode input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .detection-mode .mode-desc {
+            font-size: 12px;
+            color: #666;
+            margin-left: 28px;
+            margin-top: -5px;
+            margin-bottom: 10px;
+        }
+
+        /* Manual Editor Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            overflow: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content-editor {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #667eea;
+        }
+
+        .modal-close {
+            background: #e2e8f0;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .modal-close:hover {
+            background: #cbd5e0;
+        }
+
+        .editor-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .editor-canvas {
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            max-width: 100%;
+            cursor: crosshair;
+        }
+
+        .editor-instructions {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .editor-controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1><i class="fas fa-crosshairs"></i> Frame Position Detector - 3 Photos Layout</h1>
+
+        <div class="section">
+            <h2>📋 Hướng dẫn</h2>
+            <div class="info-box">
+                <strong>Tool này phát hiện vị trí 3 ảnh trong frame:</strong><br>
+                • Tải lên frame từ folder Frames<br>
+                • Tool sẽ tự động tìm vùng transparent (alpha = 0)<br>
+                • Detect 3 photo slots (cùng kích thước)<br>
+                • Generate positions config tự động<br>
+                • Preview kết quả với overlay màu đỏ<br>
+                • Export JSON để paste vào app.js<br><br>
+                <strong>Lưu ý:</strong><br>
+                • Frame phải có vùng transparent cho ảnh<br>
+                • 3 vùng ảnh nên có kích thước giống nhau<br>
+                • Sắp xếp từ trên xuống dưới hoặc trái qua phải
+            </div>
+
+            <div class="detection-mode">
+                <label>
+                    <input type="radio" name="mode" value="normal" checked>
+                    <strong>Normal Detection</strong>
+                </label>
+                <div class="mode-desc">Detect cơ bản - nhanh</div>
+
+                <label>
+                    <input type="radio" name="mode" value="precise">
+                    <strong>Precise Detection</strong>
+                </label>
+                <div class="mode-desc">Expand vùng ±10px - chính xác hơn nhưng chậm hơn</div>
+            </div>
+
+            <div class="frame-upload">
+                <input type="file" id="frameInput" accept="image/*" multiple>
+                <button class="btn-primary" onclick="processFrames()">
+                    <i class="fas fa-play"></i> Process Frames
+                </button>
+            </div>
+        </div>
+
+        <div id="previewSection" class="section" style="display: none;">
+            <h2>🖼️ Preview Results</h2>
+            <div class="preview-container" id="previewContainer"></div>
+        </div>
+
+        <!-- Manual Editor Modal -->
+        <div id="manualEditorModal" class="modal">
+            <div class="modal-content-editor">
+                <div class="modal-header">
+                    <h2><i class="fas fa-edit"></i> Chỉnh Sửa Thủ Công</h2>
+                    <button class="modal-close" onclick="closeManualEditor()">×</button>
+                </div>
+
+                <div class="editor-instructions">
+                    <strong>🎯 Hướng dẫn:</strong><br>
+                    1. Kéo từng vùng đỏ để căn chỉnh với khung hình trong frame<br>
+                    2. Kéo góc dưới phải của vùng đỏ để thay đổi kích thước<br>
+                    3. 3 vùng đỏ đánh số từ 1-3 (từ trên xuống dưới)<br>
+                    4. Nhấn "✅ Lưu" khi hoàn tất
+                </div>
+
+                <div class="editor-container" id="editorContainer">
+                    <canvas id="editorCanvas" class="editor-canvas"></canvas>
+                </div>
+
+                <div class="editor-controls">
+                    <button class="btn-success" onclick="saveManualEdit()">
+                        <i class="fas fa-check"></i> Lưu Vị Trí
+                    </button>
+                    <button class="btn-warning" onclick="closeManualEditor()">
+                        <i class="fas fa-times"></i> Hủy
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="resultSection" class="section" style="display: none;">
+            <h2>✅ Generated JSON</h2>
+            <div class="alert alert-success">
+                <strong>Copy JSON bên dưới và paste vào FRAME_POSITIONS trong app.js</strong><br>
+                Thay thế toàn bộ object FRAME_POSITIONS = { ... }
+            </div>
+            <div id="resultBox" class="result-box"></div>
+            <button class="btn-success" onclick="copyResult()">
+                <i class="fas fa-copy"></i> Copy JSON
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let results = {};
+        let currentEditingFile = null;
+        let editorCanvas = null;
+        let editorCtx = null;
+        let editorImage = null;
+        let editorRects = [];
+        let dragRect = null;
+        let dragOffset = { x: 0, y: 0 };
+        let resizeHandle = null;
+        let editorScale = 1;
+
+        async function processFrames() {
+            const files = document.getElementById('frameInput').files;
+            if (files.length === 0) {
+                alert('Vui lòng chọn ít nhất 1 frame!');
+                return;
+            }
+
+            results = {};
+            document.getElementById('previewContainer').innerHTML = '';
+            document.getElementById('previewSection').style.display = 'block';
+
+            const mode = document.querySelector('input[name="mode"]:checked').value;
+
+            for (let file of files) {
+                const result = await detectFrame(file, mode);
+                if (result.success) {
+                    results[file.name] = {
+                        photoSize: result.photoSize,
+                        positions: result.positions.map(p => ({
+                            x: p.x,
+                            y: p.y,
+                            centerX: p.centerX
+                        }))
+                    };
+                    showPreview(file.name, result);
+                }
+            }
+
+            if (Object.keys(results).length > 0) {
+                showResults();
+            }
+        }
+
+        async function detectFrame(file, mode) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const positions = findTransparentSlots(imageData, canvas.width, canvas.height, mode);
+
+                        resolve({
+                            success: positions.length === 3,
+                            positions: positions,
+                            photoSize: positions.length > 0 ? positions[0].size : null,
+                            canvas: canvas,
+                            mode: mode
+                        });
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function findTransparentSlots(imageData, width, height, mode) {
+            const data = imageData.data;
+            const transparentMap = new Array(height).fill(0).map(() => new Array(width).fill(false));
+
+            // Find transparent pixels
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const i = (y * width + x) * 4;
+                    const alpha = data[i + 3];
+                    if (alpha === 0) {
+                        transparentMap[y][x] = true;
+                    }
+                }
+            }
+
+            // Find rectangular regions
+            const regions = findRectangularRegions(transparentMap, width, height);
+
+            // Get 3 largest regions
+            regions.sort((a, b) => b.area - a.area);
+            const top3 = regions.slice(0, 3);
+
+            if (top3.length < 3) return [];
+
+            // Sort by Y position (top to bottom)
+            top3.sort((a, b) => a.y - b.y);
+
+            // Calculate common size (use median)
+            const widths = top3.map(r => r.width);
+            const heights = top3.map(r => r.height);
+            let commonWidth = median(widths);
+            let commonHeight = median(heights);
+
+            // PRECISE MODE: Expand dimensions
+            if (mode === 'precise') {
+                const expandPixels = 10;
+                commonWidth += expandPixels * 2;
+                commonHeight += expandPixels * 2;
+            }
+
+            // Generate positions
+            return top3.map((region) => {
+                let x = region.x;
+                let y = region.y;
+
+                // PRECISE MODE: Adjust position
+                if (mode === 'precise') {
+                    const expandPixels = 10;
+                    x = Math.max(0, x - expandPixels);
+                    y = Math.max(0, y - expandPixels);
+                }
+
+                return {
+                    x: Math.round(x),
+                    y: Math.round(y),
+                    centerX: false, // Set to true if you want horizontal centering
+                    size: {
+                        width: Math.round(commonWidth),
+                        height: Math.round(commonHeight)
+                    }
+                };
+            });
+        }
+
+        function findRectangularRegions(map, width, height) {
+            const regions = [];
+            const visited = new Array(height).fill(0).map(() => new Array(width).fill(false));
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    if (map[y][x] && !visited[y][x]) {
+                        const region = floodFill(map, visited, x, y, width, height);
+                        if (region.width > 100 && region.height > 100) {
+                            regions.push(region);
+                        }
+                    }
+                }
+            }
+
+            return regions;
+        }
+
+        function floodFill(map, visited, startX, startY, width, height) {
+            let minX = startX, maxX = startX;
+            let minY = startY, maxY = startY;
+
+            const queue = [[startX, startY]];
+            visited[startY][startX] = true;
+
+            while (queue.length > 0) {
+                const [x, y] = queue.shift();
+
+                minX = Math.min(minX, x);
+                maxX = Math.max(maxX, x);
+                minY = Math.min(minY, y);
+                maxY = Math.max(maxY, y);
+
+                const dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+                for (const [dx, dy] of dirs) {
+                    const nx = x + dx;
+                    const ny = y + dy;
+                    if (nx >= 0 && nx < width && ny >= 0 && ny < height &&
+                        map[ny][nx] && !visited[ny][nx]) {
+                        visited[ny][nx] = true;
+                        queue.push([nx, ny]);
+                    }
+                }
+            }
+
+            return {
+                x: minX,
+                y: minY,
+                width: maxX - minX + 1,
+                height: maxY - minY + 1,
+                area: (maxX - minX + 1) * (maxY - minY + 1)
+            };
+        }
+
+        function median(arr) {
+            const sorted = [...arr].sort((a, b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+        }
+
+        function showPreview(fileName, result) {
+            const container = document.getElementById('previewContainer');
+            const item = document.createElement('div');
+            item.className = 'preview-item';
+
+            const previewCanvas = document.createElement('canvas');
+            const ctx = previewCanvas.getContext('2d');
+            previewCanvas.width = result.canvas.width;
+            previewCanvas.height = result.canvas.height;
+
+            // Draw original
+            ctx.drawImage(result.canvas, 0, 0);
+
+            // Draw overlay
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 4;
+            result.positions.forEach((pos, i) => {
+                ctx.strokeRect(pos.x, pos.y, pos.size.width, pos.size.height);
+                ctx.fillStyle = 'red';
+                ctx.font = '30px Arial';
+                ctx.fillText(`${i + 1}`, pos.x + 10, pos.y + 40);
+            });
+
+            item.innerHTML = `
+                <div class="name">${fileName}</div>
+                <div class="info">
+                    Photo size: ${result.photoSize.width} x ${result.photoSize.height}px<br>
+                    Positions: ${result.positions.length} slots detected<br>
+                    Mode: ${result.mode === 'precise' ? '🎯 Precise' : '⚡ Normal'}
+                </div>
+            `;
+            item.appendChild(previewCanvas);
+
+            // Add manual edit button
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn-warning';
+            editBtn.style.marginTop = '10px';
+            editBtn.style.width = '100%';
+            editBtn.innerHTML = '<i class="fas fa-edit"></i> Chỉnh Sửa Thủ Công';
+            editBtn.onclick = () => openManualEditor(fileName, result);
+            item.appendChild(editBtn);
+
+            container.appendChild(item);
+        }
+
+        function showResults() {
+            document.getElementById('resultSection').style.display = 'block';
+            document.getElementById('resultBox').textContent = JSON.stringify(results, null, 2);
+        }
+
+        function copyResult() {
+            const text = document.getElementById('resultBox').textContent;
+            navigator.clipboard.writeText(text)
+                .then(() => alert('Đã copy! Paste vào FRAME_POSITIONS trong app.js'))
+                .catch(() => alert('Copy failed'));
+        }
+
+        // ===== MANUAL EDITOR =====
+        function openManualEditor(fileName, result) {
+            currentEditingFile = fileName;
+            document.getElementById('manualEditorModal').classList.add('active');
+
+            // Setup canvas
+            editorCanvas = document.getElementById('editorCanvas');
+            editorCtx = editorCanvas.getContext('2d');
+
+            // Calculate scale to fit screen
+            const maxWidth = window.innerWidth * 0.7;
+            const maxHeight = window.innerHeight * 0.6;
+            editorScale = Math.min(maxWidth / result.canvas.width, maxHeight / result.canvas.height, 1);
+
+            editorCanvas.width = result.canvas.width * editorScale;
+            editorCanvas.height = result.canvas.height * editorScale;
+
+            // Draw image
+            editorCtx.drawImage(result.canvas, 0, 0, editorCanvas.width, editorCanvas.height);
+
+            // Initialize rectangles
+            editorRects = result.positions.map((pos, i) => ({
+                x: pos.x * editorScale,
+                y: pos.y * editorScale,
+                width: pos.size.width * editorScale,
+                height: pos.size.height * editorScale,
+                label: i + 1
+            }));
+
+            // Store original image for redrawing
+            editorImage = result.canvas;
+
+            drawEditorCanvas();
+            setupEditorInteraction();
+        }
+
+        function closeManualEditor() {
+            document.getElementById('manualEditorModal').classList.remove('active');
+            currentEditingFile = null;
+            editorCanvas = null;
+            editorCtx = null;
+            editorImage = null;
+            editorRects = [];
+            dragRect = null;
+            resizeHandle = null;
+        }
+
+        function drawEditorCanvas() {
+            if (!editorCtx || !editorImage) return;
+
+            // Clear and redraw image
+            editorCtx.clearRect(0, 0, editorCanvas.width, editorCanvas.height);
+            editorCtx.drawImage(editorImage, 0, 0, editorCanvas.width, editorCanvas.height);
+
+            // Draw rectangles
+            editorRects.forEach((rect, i) => {
+                editorCtx.strokeStyle = 'red';
+                editorCtx.lineWidth = 3;
+                editorCtx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+                editorCtx.fillRect(rect.x, rect.y, rect.width, rect.height);
+                editorCtx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+
+                // Draw label
+                editorCtx.fillStyle = 'white';
+                editorCtx.strokeStyle = 'black';
+                editorCtx.lineWidth = 3;
+                editorCtx.font = 'bold 30px Arial';
+                editorCtx.strokeText(rect.label, rect.x + 10, rect.y + 40);
+                editorCtx.fillText(rect.label, rect.x + 10, rect.y + 40);
+
+                // Draw resize handle (bottom-right corner)
+                const handleSize = 10;
+                editorCtx.fillStyle = 'red';
+                editorCtx.fillRect(rect.x + rect.width - handleSize, rect.y + rect.height - handleSize, handleSize, handleSize);
+            });
+        }
+
+        function setupEditorInteraction() {
+            editorCanvas.onmousedown = (e) => {
+                const rect = editorCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                // Check for resize handle first
+                for (let i = editorRects.length - 1; i >= 0; i--) {
+                    const r = editorRects[i];
+                    const handleSize = 10;
+                    if (x >= r.x + r.width - handleSize && x <= r.x + r.width &&
+                        y >= r.y + r.height - handleSize && y <= r.y + r.height) {
+                        resizeHandle = i;
+                        return;
+                    }
+                }
+
+                // Check for drag
+                for (let i = editorRects.length - 1; i >= 0; i--) {
+                    const r = editorRects[i];
+                    if (x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height) {
+                        dragRect = i;
+                        dragOffset = { x: x - r.x, y: y - r.y };
+                        break;
+                    }
+                }
+            };
+
+            editorCanvas.onmousemove = (e) => {
+                const rect = editorCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                if (resizeHandle !== null) {
+                    const r = editorRects[resizeHandle];
+                    r.width = Math.max(50, x - r.x);
+                    r.height = Math.max(50, y - r.y);
+                    drawEditorCanvas();
+                } else if (dragRect !== null) {
+                    const r = editorRects[dragRect];
+                    r.x = Math.max(0, Math.min(editorCanvas.width - r.width, x - dragOffset.x));
+                    r.y = Math.max(0, Math.min(editorCanvas.height - r.height, y - dragOffset.y));
+                    drawEditorCanvas();
+                }
+
+                // Change cursor based on hover
+                let cursor = 'default';
+                for (let r of editorRects) {
+                    const handleSize = 10;
+                    if (x >= r.x + r.width - handleSize && x <= r.x + r.width &&
+                        y >= r.y + r.height - handleSize && y <= r.y + r.height) {
+                        cursor = 'nwse-resize';
+                        break;
+                    } else if (x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height) {
+                        cursor = 'move';
+                        break;
+                    }
+                }
+                editorCanvas.style.cursor = cursor;
+            };
+
+            editorCanvas.onmouseup = () => {
+                dragRect = null;
+                resizeHandle = null;
+            };
+
+            editorCanvas.onmouseleave = () => {
+                dragRect = null;
+                resizeHandle = null;
+            };
+        }
+
+        function saveManualEdit() {
+            if (!currentEditingFile || editorRects.length !== 3) {
+                alert('❌ Cần có đủ 3 vùng!');
+                return;
+            }
+
+            // Sort by Y position
+            const sorted = [...editorRects].sort((a, b) => a.y - b.y);
+
+            // Calculate positions in original scale
+            const positions = sorted.map(rect => ({
+                x: Math.round(rect.x / editorScale),
+                y: Math.round(rect.y / editorScale),
+                centerX: false,
+                size: {
+                    width: Math.round(rect.width / editorScale),
+                    height: Math.round(rect.height / editorScale)
+                }
+            }));
+
+            // Calculate common size (median)
+            const widths = positions.map(p => p.size.width);
+            const heights = positions.map(p => p.size.height);
+            const commonWidth = median(widths);
+            const commonHeight = median(heights);
+
+            // Update all positions to use common size
+            positions.forEach(pos => {
+                pos.size.width = commonWidth;
+                pos.size.height = commonHeight;
+            });
+
+            // Update results
+            results[currentEditingFile] = {
+                photoSize: { width: commonWidth, height: commonHeight },
+                positions: positions.map(p => ({
+                    x: p.x,
+                    y: p.y,
+                    centerX: p.centerX
+                }))
+            };
+
+            // Update preview
+            const previewItem = Array.from(document.querySelectorAll('.preview-item')).find(
+                item => item.querySelector('.name').textContent === currentEditingFile
+            );
+
+            if (previewItem) {
+                const canvas = previewItem.querySelector('canvas');
+                const ctx = canvas.getContext('2d');
+
+                // Redraw with new positions
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(editorImage, 0, 0);
+
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 4;
+                positions.forEach((pos, i) => {
+                    ctx.strokeRect(pos.x, pos.y, pos.size.width, pos.size.height);
+                    ctx.fillStyle = 'red';
+                    ctx.font = '30px Arial';
+                    ctx.fillText(i + 1, pos.x + 10, pos.y + 40);
+                });
+
+                // Update info
+                const info = previewItem.querySelector('.info');
+                info.innerHTML = `
+                    Photo size: ${commonWidth} x ${commonHeight}px<br>
+                    Positions: 3 slots detected<br>
+                    Mode: ✋ Manual Edited
+                `;
+            }
+
+            closeManualEditor();
+            showResults();
+            alert('✅ Đã lưu vị trí! Nhớ copy JSON để update vào app.js');
+        }
+
+        function median(arr) {
+            const sorted = [...arr].sort((a, b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+        }
+    </script>
+</body>
+
+</html>

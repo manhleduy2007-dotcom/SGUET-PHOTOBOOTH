@@ -1,0 +1,19 @@
+{
+    "name": "SGUET Photobooth",
+    "short_name": "SGUET Photo",
+    "description": "Ứng dụng chụp ảnh kỷ yếu SGUET - Tự động chụp 3 ảnh",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#4A90E2",
+    "orientation": "portrait",
+    "scope": "/",
+    "icons": [
+        {
+            "src": "SGUET.jpg",
+            "sizes": "512x512",
+            "type": "image/jpeg",
+            "purpose": "any maskable"
+        }
+    ]
+}
