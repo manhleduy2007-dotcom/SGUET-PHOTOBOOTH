@@ -816,14 +816,15 @@ async function showQRCode() {
         // Check if response is JSON
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Server đang bảo trì hoặc không có kết nối');
+            throw new Error(`Server không trả JSON (HTTP ${response.status}), /api/upload có đang chạy không?`);
         }
+
+        // Đọc body trước để lấy lý do lỗi thật từ server
+        const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(`Server lỗi (${response.status})`);
+            throw new Error(`Server lỗi (${response.status}): ${data.error || 'không rõ lý do'}`);
         }
-
-        const data = await response.json();
 
         if (data.success && data.url) {
             const imageUrl = data.url;
