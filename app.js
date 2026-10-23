@@ -768,7 +768,7 @@ function loadImageSafe(src) {
 }
 
 // ===== QR CODE =====
-async function uploadWithTimeout(url, options, timeout = 10000) {
+async function uploadWithTimeout(url, options, timeout = 40000) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -802,7 +802,7 @@ async function showQRCode() {
     }
 
     const qrcodeContainer = document.getElementById('qrcode');
-    qrcodeContainer.innerHTML = '<p style="color: #667eea; font-weight: 600;"><i class="fas fa-spinner fa-spin"></i> Đang upload ảnh...</p>';
+    qrcodeContainer.innerHTML = '<p style="color: #667eea; font-weight: 600;"><i class="fas fa-spinner fa-spin"></i> Đang upload ảnh (có thể mất 20-30s)...</p>';
 
     try {
         const base64Data = STATE.finalImage.split(',')[1];
@@ -811,7 +811,7 @@ async function showQRCode() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ image: base64Data })
-        }, 10000);
+        }, 40000);
 
         // Check if response is JSON
         const contentType = response.headers.get('content-type');
