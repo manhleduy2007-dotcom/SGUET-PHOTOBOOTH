@@ -581,9 +581,8 @@ let currentPreviewFrame = null;
 
 function loadFrames() {
     const frames = [
-        { name: 'Frame 1', path: './Frames/Frame1.png' },
-        { name: 'Frame 2', path: './Frames/Frame2.png' },
-        { name: 'Frame 3', path: './Frames/Frame3.png' }
+        { name: 'Frame 1', path: './Frames/Frame_1_final.png' },
+        { name: 'Frame 2', path: './Frames/Frame_2_final.png' }
     ];
 
     frameGrid.innerHTML = '';
