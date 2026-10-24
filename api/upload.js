@@ -89,6 +89,7 @@ function getUploaders() {
     const list = [];
     if (process.env.IMGBB_KEY) list.push(['ImgBB', uploadImgbb]);
     list.push(
+        ['tmpfiles', uploadTmpfiles],
         ['Catbox', uploadCatbox],
         ['Litterbox', uploadLitterbox],
         ['0x0.st', upload0x0]

@@ -195,9 +195,25 @@
             return params.get('img');
         }
 
+        // Chỉ nhận link https tới các host mà api/upload.js đang dùng.
+        // Nếu thêm host mới trong upload.js thì thêm tên miền vào danh sách này.
+        const ALLOWED_HOSTS = ['catbox.moe', 'ibb.co', 'tmpfiles.org', '0x0.st'];
+
+        function getSafeImageUrl() {
+            const raw = getImageUrl();
+            if (!raw) return null;
+            try {
+                const u = new URL(raw);
+                const hostOk = ALLOWED_HOSTS.some(h => u.hostname === h || u.hostname.endsWith('.' + h));
+                return (u.protocol === 'https:' && hostOk) ? u.href : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
         // Load and display image
         async function loadImage() {
-            const imageUrl = getImageUrl();
+            const imageUrl = getSafeImageUrl();
             const contentDiv = document.getElementById('content');
 
             if (!imageUrl) {
@@ -215,8 +231,7 @@
                 // Display image directly without fetch check (avoid CORS issues)
                 contentDiv.innerHTML = `
                     <div class="image-container">
-                        <img src="${imageUrl}" alt="SGUET Photo" id="photoImage" crossorigin="anonymous" 
-                             onerror="handleImageError()">
+                        
                     </div>
                     <button class="download-btn" onclick="downloadImage()">
                         <i class="fas fa-download"></i>
@@ -237,13 +252,20 @@
                         </p>
                     </div>
                 `;
+
+                const img = document.createElement('img');
+                img.alt = 'SGUET Photo';
+                img.id = 'photoImage';
+                img.onerror = handleImageError;
+                img.src = imageUrl;
+                contentDiv.querySelector('.image-container').appendChild(img);
             } catch (error) {
                 console.error('Error loading image:', error);
                 contentDiv.innerHTML = `
                     <div class="error">
                         <i class="fas fa-exclamation-circle"></i>
                         <p>Không thể tải ảnh!</p>
-                        <p style="font-size: 0.85rem; margin-top: 10px;">${error.message}</p>
+                        <p style="font-size: 0.85rem; margin-top: 10px;">Vui lòng thử lại sau.</p>
                     </div>
                 `;
             }
@@ -263,8 +285,9 @@
 
         // Download image
         async function downloadImage() {
-            const imageUrl = getImageUrl();
+            const imageUrl = getSafeImageUrl();
             const btn = document.querySelector('.download-btn');
+            if (!imageUrl) return;
 
             try {
                 // Method 1: Try direct download first (works for same-origin)
