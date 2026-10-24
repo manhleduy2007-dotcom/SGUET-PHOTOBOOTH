@@ -91,7 +91,6 @@ function getUploaders() {
     list.push(
         ['Catbox', uploadCatbox],
         ['Litterbox', uploadLitterbox],
-        ['tmpfiles', uploadTmpfiles],
         ['0x0.st', upload0x0]
     );
     return list;
